@@ -19,7 +19,7 @@ class NavigatorTestCase(unittest.TestCase):
             self.assertEqual(discovery_result.status(), 200)
 
             href = discovery_result.resource().get_href('users')
-            # self.assertEqual(href, '/users')
+            self.assertEqual(href, '/users')
 
 
 if __name__ == '__main__':
