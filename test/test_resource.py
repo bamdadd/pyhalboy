@@ -23,12 +23,13 @@ class ResourceTestCase(unittest.TestCase):
             {'href': '/admins/5', 'title': 'Kate'}
         ], resource.get_link('ea:admin'))
 
-    # def test_add_links(self):
-    #     resource = Resource().add_links({'self': {'href': '/orders'},
-    #                                      'ea:basket': {'href': '/baskets/123123'},
-    #                                      'ea:customer': {'href': '/customers/3474'}})
-    #     self.assertEqual(resource.get_href('ea:basket'), '/baskets/123123')
-    #     self.assertEqual(resource.get_href('ea:customer'), '/customers/3474')
+    def test_add_links(self):
+        resource = Resource().add_links({'self': {'href': '/orders'},
+                                         'ea:basket': {'href': '/baskets/123123'},
+                                         'ea:customer': {'href': '/customers/3474'}})
+
+        self.assertEqual(resource.get_href('ea:basket'), '/baskets/123123')
+        self.assertEqual(resource.get_href('ea:customer'), '/customers/3474')
 
 
 if __name__ == '__main__':

@@ -32,12 +32,9 @@ class Resource(object):
             .add_resources(object_to_resource(_embedded)) \
             .add_properties(properties)
 
-    def get_href(self, href):
-        pass
+    def get_href(self, rel):
 
-    def _add_link(self, resource, re_value):
-        rel = re_value[0]
-        value = re_value[1]
+        return self.links[rel]['href']
 
     def _create_or_append(self, coll, rel, value):
         if not (rel in coll):
@@ -58,12 +55,8 @@ class Resource(object):
         return self.links[rel]
 
     def add_links(self, coll):
-        self.apply_to_resource(coll, self._add_link)
+        list(map(lambda pair: self.add_link(pair[0], pair[1]), (r.to_pairs(coll))))
         return self
-
-    def _add_to_resource(self, resources, k, v):
-        # (lambda resource, kv: resource.add_resoruce(r.to_pairs(kv)))
-        return resources.add_resource()
 
     def add_resources(self, resources):
         # return self.apply_to_resource(self,
