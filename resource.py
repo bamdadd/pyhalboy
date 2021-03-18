@@ -13,6 +13,10 @@ def object_to_resource(_embedded):
     return list(map(lambda x: object_to_resource(x) if type(x) == list else Resource.from_object(x), _embedded))
 
 
+def links_to_object(links):
+    if r.is_empty(links):
+        return {}
+    return {"_links": links}
 
 
 class Resource(object):
@@ -44,7 +48,7 @@ class Resource(object):
         return coll
 
     def add_link(self, rel, value):
-        if r.is_empty(value):
+        if r.is_nil(value) or r.is_empty(value):
             return self
         if type(value) == str:
             return self.add_link(rel, {'href': value})
@@ -69,3 +73,6 @@ class Resource(object):
 
     def add_properties(self, properties):
         return self
+
+    def to_object(self):
+        return r.merge({}, links_to_object(self.links))

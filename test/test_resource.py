@@ -31,6 +31,10 @@ class ResourceTestCase(unittest.TestCase):
         self.assertEqual(resource.get_href('ea:basket'), '/baskets/123123')
         self.assertEqual(resource.get_href('ea:customer'), '/customers/3474')
 
+    def test_add_non_link(self):
+        resource = Resource().add_link('ea:basket', None)
+        self.assertEqual({}, resource.to_object())
+
 
 if __name__ == '__main__':
     unittest.main()
