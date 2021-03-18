@@ -4,7 +4,7 @@
 A library for all things hypermedia. insipred by [Halboy](https://github.com/jimmythompson/halboy/) and [Halboy.js](https://github.com/jimmythompson/halboy.js/)
 
 * Create hypermedia resources
-* Marshal to and from plain JS objects
+* Marshal to and from plain python dicts
 * Navigate JSON+HAL APIs
 
 ## API
@@ -90,7 +90,7 @@ resource.to_object()
 //   state: 'dispatching'
 // }
 
-Resource.fromObject(resource.to_object())
+Resource.from_object(resource.to_object())
   .get_href('self')
 // '/orders/123'
 ```
