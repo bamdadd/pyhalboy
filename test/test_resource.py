@@ -1,6 +1,13 @@
 import unittest
-
 from resource import Resource
+
+from resource import object_to_resource
+
+
+def createUser(id, name):
+    return Resource() \
+        .add_link('self', '/users/{}'.format(id)) \
+        .add_property('name', name)
 
 
 class ResourceTestCase(unittest.TestCase):
@@ -58,6 +65,19 @@ class ResourceTestCase(unittest.TestCase):
                           'ea:customer': {'href': '/customers/3474'},
                           'self': {'href': '/order/123'}}, resource.get_links())
 
+    def test_add_resource(self):
+        resource = Resource() \
+            .add_resource('users', [createUser('fred', 'Fred'),
+                                    createUser('sue', 'Sue'),
+                                    createUser('mary', 'Mary'),
+                                    ])
+        self.assertEqual({'users': [{'_links': {'self': {'href': '/users/fred'}},
+                                                   'name': 'Fred'},
+                                                  {'_links': {'self': {'href': '/users/sue'}},
+                                                   'name': 'Sue'},
+                                                  {'_links': {'self': {'href': '/users/mary'}},
+                                                   'name': 'Mary'}]}, resource.get_resources())
+
     def test_get_resources(self):
         resource1 = Resource().add_links(
             {
@@ -76,8 +96,12 @@ class ResourceTestCase(unittest.TestCase):
             .add_resource('ea:order', resource1) \
             .add_resource('ea:address', resource2)
 
-        self.assertEqual({'ea:order': resource1,
-                          'ea:address': resource2}, resource.get_resources())
+        self.assertEqual({'ea:address': {'_links': {'ea:basket': {'href': '/baskets/98713'},
+                                                    'ea:customer': {'href': '/customers/12369'},
+                                                    'self': {'href': '/orders/124'}}},
+                          'ea:order': {'_links': {'ea:basket': {'href': '/baskets/98713'},
+                                                  'ea:customer': {'href': '/customers/12369'},
+                                                  'self': {'href': '/orders/124'}}}}, resource.get_resources())
 
     def test_stack_resources(self):
         resource1 = Resource().add_links(
@@ -147,6 +171,34 @@ class ResourceTestCase(unittest.TestCase):
                                'self': {'href': '/orders/125'}},
                           'currentlyProcessing': 14,
                           'state': 'processing'}, resource.to_object())
+
+    # def test_obj_to_resource(self):
+    #     resource = Resource().add_properties({'currentlyProcessing': 14,
+    #                                           'state': 'processing'})
+    #     obj = resource.to_object()
+    #     obj_resource = object_to_resource(obj)
+    #     self.assertEqual(obj_resource.get_property('currentlyProcessing'), 14)
+    #     self.assertEqual(obj_resource.get_property('state'), 'processing')
+
+    # def test_obj_to_resource_dict(self):
+    #     obj = {'orders': [{'currentlyProcessing': 14, 'state': 'processing'}, {'currentlyProcessing': 14, 'state': 'processing'}]}
+    #     obj_resource = object_to_resource(obj)
+    #     self.assertEqual(obj_resource.get_property('currentlyProcessing'), 14)
+    #     self.assertEqual(obj_resource.get_property('state'), 'processing')
+
+    # def test_obj_to_resource2(self):
+    #     resource1 = Resource().add_properties({'currentlyProcessing': 14,
+    #                                            'state': 'processing'})
+    #     resource2 = Resource().add_properties({'currentlyProcessing': 14,
+    #                                            'state': 'processing'})
+    #     resource = Resource() \
+    #         .add_resource('orders', resource1) \
+    #         .add_resource('orders', resource2)
+    #     obj = resource.to_object()
+    #     obj_resource = object_to_resource(obj['_embedded'])
+    #     print(obj_resource.get_properties())
+    #     self.assertEqual(obj_resource.get_property('currentlyProcessing'), 14)
+    #     self.assertEqual(obj_resource.get_property('state'), 'processing')
 
 
 if __name__ == '__main__':

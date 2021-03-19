@@ -28,7 +28,8 @@ def resources_to_object(resources):
     for k in coll.keys():
         if type(coll[k]) == list:
             coll[k] = (list(map(lambda x: x.to_object(), resources[k])))
-        coll[k] = coll[k].to_object()
+        else:
+            coll[k] = coll[k].to_object()
     return {"_embedded": coll}
 
 
@@ -41,9 +42,14 @@ class Resource(object):
         self.embedded = {}
 
     def from_object(body):
-        object = json.loads(body)
-        _links = object["_links"]
-        _embedded = object["_embedded"]
+        if type(body) == str or type(body) == bytes:
+            object =json.loads(body)
+        elif type(body) == dict:
+            object = body
+        else:
+            raise RuntimeError("unknow type {} for {}".format(type(body), body))
+        _links = object.get("_links")
+        _embedded = object.get("_embedded")
         properties = object
 
         return Resource() \
@@ -87,11 +93,13 @@ class Resource(object):
         return self
 
     def add_resources(self, coll):
-        list(map(lambda pair: self.add_resource(pair[0], pair[1]), (r.to_pairs(coll))))
+        if not r.is_empty(coll):
+            print(coll)
+            list(map(lambda pair: self.add_resource(pair[0], pair[1]), (r.to_pairs(coll))))
         return self
 
     def get_resources(self):
-        return self.embedded
+        return resources_to_object(self.embedded).get('_embedded')
 
     def get_resource(self, key):
         return self.embedded[key]
@@ -111,6 +119,9 @@ class Resource(object):
 
     def get_property(self, key):
         return self.properties[key]
+
+    def get_properties(self):
+        return self.properties
 
     def add_properties(self, coll):
         list(map(lambda pair: self.add_property(pair[0], pair[1]), (r.to_pairs(coll))))
