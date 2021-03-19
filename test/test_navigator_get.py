@@ -39,7 +39,6 @@ class NavigatorGetTestCase(unittest.TestCase):
             # print(users)
             # names = list(map(lambda u: u.get_property('name'), users))
 
-            print(result.resource().to_object())
             self.assertEqual(result.resource().get_property('test'), 1)
             self.assertEqual(result.resource().get_href('self'), 'http://test.com/users')
 

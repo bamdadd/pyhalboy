@@ -94,7 +94,6 @@ class Resource(object):
 
     def add_resources(self, coll):
         if not r.is_empty(coll):
-            print(coll)
             list(map(lambda pair: self.add_resource(pair[0], pair[1]), (r.to_pairs(coll))))
         return self
 

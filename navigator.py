@@ -1,12 +1,12 @@
 from resource import Resource
-from uritemplate import URITemplate, expand
-
 
 import ramda as r
 import requests
 import uri
+from uritemplate import URITemplate
 
-def resolve_link (templated_url, params):
+
+def resolve_link(templated_url, params):
     template = URITemplate(templated_url)
     variables = template.variables
     # variables = template.parts.reduce((accumulator, part) => {
@@ -26,9 +26,9 @@ def resolve_link (templated_url, params):
         'params': full_params
     }
 
+
 def make_absolute(base, href):
     return requests.compat.urljoin(base, href)
-
 
 
 class Navigator:
@@ -37,6 +37,7 @@ class Navigator:
         self._status_code = None
         self._location = None
         self._resource = None
+        self._response = None
 
     def discover(self, url, options={}):
         return Navigator(options).get_url(url, {}, {})
@@ -44,6 +45,15 @@ class Navigator:
     def get_url(self, url, params, config):
         response = requests.get(url)
         self._status_code = response.status_code
+        self._location = response.url
+        self._response = response
+        self._resource = Resource.from_object(response.content)
+        return self
+
+    def post_url(self, url, body, params, config):
+        response = requests.post(url, data=body)
+        self._status_code = response.status_code
+        self._response = response
         self._location = response.url
         self._resource = Resource.from_object(response.content)
         return self
@@ -54,6 +64,8 @@ class Navigator:
     def status(self):
         return self._status_code
 
+    def get_header(self, key):
+        return self._response.headers[key]
 
     def _resolve_link(self, rel, params):
         relative_href = self._resource.get_href(rel)
@@ -68,3 +80,7 @@ class Navigator:
     def get(self, rel, params={}, config={}):
         link = self._resolve_link(rel, params)
         return self.get_url(link['href'], link['query_params'], config)
+
+    def post(self, rel, body, params={}, config={}):
+        link = self._resolve_link(rel, params)
+        return self.post_url(link['href'], body, link['query_params'], config)
