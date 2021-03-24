@@ -1,7 +1,7 @@
 import unittest
-from resource import Resource
+from ..resource import Resource
 
-from resource import object_to_resource
+from ..resource import object_to_resource
 
 
 def createUser(id, name):

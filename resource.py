@@ -11,7 +11,10 @@ def objects_to_links(_links):
 def object_to_resource(_embedded):
     if (not _embedded) or r.is_empty(_embedded):
         return {}
-    return list(map(lambda x: object_to_resource(x) if type(x) == list else Resource.from_object(x), _embedded))
+    result = {}
+    for k in _embedded.keys():
+        result[k] = list(map(lambda x: object_to_resource(x) if type(x) == list else Resource.from_object(x), _embedded[k]))
+    return result
 
 
 def links_to_object(links):
@@ -43,19 +46,19 @@ class Resource(object):
 
     def from_object(body):
         if type(body) == str or type(body) == bytes:
-            object =json.loads(body)
+            object = json.loads(body)
         elif type(body) == dict:
             object = body
         else:
             raise RuntimeError("unknow type {} for {}".format(type(body), body))
         _links = object.get("_links")
         _embedded = object.get("_embedded")
-        properties = object
+        properties = {k: object[k] for k in object.keys() if k not in ['_links', '_embedded']}
 
         return Resource() \
             .add_links(objects_to_links(_links)) \
-            .add_resources(object_to_resource(_embedded)) \
-            .add_properties(properties)
+            .add_properties(properties) \
+            .add_resources(object_to_resource(_embedded))
 
     def get_href(self, rel):
 

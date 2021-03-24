@@ -1,4 +1,4 @@
-from resource import Resource
+from .resource import Resource
 
 import ramda as r
 import requests
@@ -39,7 +39,8 @@ class Navigator:
         self._resource = None
         self._response = None
 
-    def discover(self, url, options={}):
+    @staticmethod
+    def discover(url, options={}):
         return Navigator(options).get_url(url, {}, {})
 
     def get_url(self, url, params, config):
@@ -47,7 +48,7 @@ class Navigator:
         self._status_code = response.status_code
         self._location = response.url
         self._response = response
-        self._resource = Resource.from_object(response.content)
+        self._resource = Resource.from_object(response.json())
         return self
 
     def post_url(self, url, body, params, config):
@@ -55,7 +56,7 @@ class Navigator:
         self._status_code = response.status_code
         self._response = response
         self._location = response.url
-        self._resource = Resource.from_object(response.content)
+        self._resource = Resource.from_object(response.json())
         return self
 
     def resource(self):
