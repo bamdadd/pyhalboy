@@ -14,7 +14,7 @@ A library for all things hypermedia. insipred by [Halboy](https://github.com/jim
 With PyHalboy you can create resources, and pull information from them.
 
 ```python
-from 'pyhalboy' import Resource
+from pyhalboy import Resource
 
 discountResource = Resource()
     .add_link('self', '/discounts/1256')
@@ -58,7 +58,7 @@ resource
 You can create HAL resources from plain JS objects, and vice versa.
 
 ```python
-from 'pyhalboy' import Resource
+from pyhalboy import Resource
 
 itemResources = [
    Resource()
@@ -103,7 +103,7 @@ through its links. When you've found what you want, you call
 using any of the methods above.
 
 ```python
-from 'pyhalboy' import Navigator
+from pyhalboy import Navigator
 
 //  GET / - 200 OK
 //  {
@@ -148,4 +148,15 @@ sue_result
   .resource()
   .get_property('title')
 // 'Dev'
+```
+
+
+### Contribution
+Feel free to submit PRs and raise bugs.
+
+### publishing
+```shell
+ python setup.py install sdist bdist_wheel
+ twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+ 
 ```
