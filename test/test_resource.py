@@ -1,6 +1,6 @@
 import unittest
 
-from pyhalboy.pyhalboy import Resource
+from pyhalboy.resource import Resource
 
 
 def createUser(id, name):

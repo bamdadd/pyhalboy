@@ -4,3 +4,4 @@ env
 .eggs
 dist
 pyhalboy.egg-info
+build
