@@ -1,7 +1,7 @@
 import unittest
 
 import requests_mock
-from navigator import Navigator
+from pyhalboy.pyhalboy import Navigator
 
 
 class NavigatorTestCase(unittest.TestCase):

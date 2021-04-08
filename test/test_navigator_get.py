@@ -1,8 +1,9 @@
 import unittest
-from resource import Resource
-
 import requests_mock
-from navigator import Navigator
+
+from pyhalboy.pyhalboy import Resource
+from pyhalboy.pyhalboy import Navigator
+
 
 
 def createUser(id, name):

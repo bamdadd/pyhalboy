@@ -52,7 +52,7 @@ class Navigator:
         return self
 
     def post_url(self, url, body, params, config):
-        response = requests.post(url, data=body)
+        response = requests.post(url, json=body)
         self._status_code = response.status_code
         self._response = response
         self._location = response.url
