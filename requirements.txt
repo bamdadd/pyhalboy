@@ -2,3 +2,4 @@ requests
 requests-mock
 ramda
 uritemplate
+uri

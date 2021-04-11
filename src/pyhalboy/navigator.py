@@ -43,8 +43,8 @@ class Navigator:
     def discover(url, options={}):
         return Navigator(options).get_url(url, {}, {})
 
-    def get_url(self, url, params, config):
-        response = requests.get(url)
+    def get_url(self, url, params={}, config={}):
+        response = requests.get(url, params=params)
         self._status_code = response.status_code
         self._location = response.url
         self._response = response
@@ -52,7 +52,7 @@ class Navigator:
         return self
 
     def post_url(self, url, body, params, config):
-        response = requests.post(url, json=body)
+        response = requests.post(url, json=body, params=params)
         self._status_code = response.status_code
         self._response = response
         self._location = response.url

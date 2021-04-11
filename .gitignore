@@ -5,3 +5,4 @@ env
 dist
 pyhalboy.egg-info
 build
+.idea
