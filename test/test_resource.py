@@ -1,6 +1,6 @@
 import unittest
 
-from pyhalboy.resource import Resource
+from src.pyhalboy import Resource
 
 
 def createUser(id, name):
@@ -55,6 +55,15 @@ class ResourceTestCase(unittest.TestCase):
                           "ea:customer": '/customers/3474',
                           "self": "/order/123"}, resource.get_hrefs())
 
+    def test_multiple_hrefs(self):
+        resource = Resource().add_links({'ea:basket': '/baskets/123123',
+                                         "ea:customer": '/customers/3474',
+                                         "self": "/order/123"})
+        resource.add_link('ea:customer', '/customers/4567')
+        self.assertEqual({'ea:basket': '/baskets/123123',
+                          "ea:customer": ['/customers/3474', '/customers/4567'],
+                          "self": "/order/123"}, resource.get_hrefs())
+
     def test_get_links(self):
         resource = Resource().add_links({'ea:basket': '/baskets/123123',
                                          "ea:customer": '/customers/3474',
@@ -71,11 +80,11 @@ class ResourceTestCase(unittest.TestCase):
                                     createUser('mary', 'Mary'),
                                     ])
         self.assertEqual({'users': [{'_links': {'self': {'href': '/users/fred'}},
-                                                   'name': 'Fred'},
-                                                  {'_links': {'self': {'href': '/users/sue'}},
-                                                   'name': 'Sue'},
-                                                  {'_links': {'self': {'href': '/users/mary'}},
-                                                   'name': 'Mary'}]}, resource.get_resources())
+                                     'name': 'Fred'},
+                                    {'_links': {'self': {'href': '/users/sue'}},
+                                     'name': 'Sue'},
+                                    {'_links': {'self': {'href': '/users/mary'}},
+                                     'name': 'Mary'}]}, resource.get_resources())
 
     def test_get_resources(self):
         resource1 = Resource().add_links(

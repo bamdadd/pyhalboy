@@ -13,7 +13,8 @@ def object_to_resource(_embedded):
         return {}
     result = {}
     for k in _embedded.keys():
-        result[k] = list(map(lambda x: object_to_resource(x) if type(x) == list else Resource.from_object(x), _embedded[k]))
+        result[k] = list(
+            map(lambda x: object_to_resource(x) if type(x) == list else Resource.from_object(x), _embedded[k]))
     return result
 
 
@@ -86,7 +87,10 @@ class Resource(object):
         return self.links[rel]
 
     def get_hrefs(self):
-        return f.reduce(lambda acc, x: {**acc, x[0]: x[1]["href"]}, r.to_pairs(self.links), {})
+        return f.reduce(lambda acc, x:
+                        {**acc, x[0]: r.cond([[r.pipe(type, r.equals(dict)), r.prop("href")],
+                                              [r.pipe(type, r.equals(list)), r.map(r.prop('href'))]],
+                                             x[1])}, r.to_pairs(self.links), {})
 
     def get_links(self):
         return self.links
