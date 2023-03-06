@@ -12,9 +12,12 @@ def object_to_resource(_embedded):
     if (not _embedded) or r.is_empty(_embedded):
         return {}
     result = {}
-    for k in _embedded.keys():
-        result[k] = list(
-            map(lambda x: object_to_resource(x) if type(x) == list else Resource.from_object(x), _embedded[k]))
+    for k, v in _embedded.items():
+        if isinstance(v, dict):
+            result[k] = Resource.from_object(v)
+        else:
+            result[k] = list(map(
+                lambda x: object_to_resource(x) if isinstance(x, list) else Resource.from_object(x), v))
     return result
 
 
@@ -51,7 +54,7 @@ class Resource(object):
         elif type(body) == dict:
             object = body
         else:
-            raise RuntimeError("unknow type {} for {}".format(type(body), body))
+            raise RuntimeError(f"Unknown Type {type(body)} for {body}")
         _links = object.get("_links")
         _embedded = object.get("_embedded")
         properties = {k: object[k] for k in object.keys() if k not in ['_links', '_embedded']}
