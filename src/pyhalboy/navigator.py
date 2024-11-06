@@ -2,7 +2,6 @@ from .resource import Resource
 
 import ramda as r
 import requests
-import uri
 from uritemplate import URITemplate
 
 
