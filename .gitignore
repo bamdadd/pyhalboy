@@ -6,3 +6,4 @@ dist
 pyhalboy.egg-info
 build
 .idea
+.direnv/
