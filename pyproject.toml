@@ -45,6 +45,7 @@ format-check = "ruff format --check"
 format-fix = "ruff format"
 type-check = "pyright"
 test = "pytest"
+precommit = ["lint-fix", "format-fix", "test"]
 
 [build-system]
 requires = ["poetry-core"]
