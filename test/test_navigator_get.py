@@ -1,11 +1,13 @@
-import unittest
+import sys
+import pytest
+
 import requests_mock
 
 from pyhalboy.resource import Resource
 from pyhalboy.navigator import Navigator
 
 
-def createUser(id, name):
+def create_user(id, name):
     return (
         Resource()
         .add_link("self", "/users/{}".format(id))
@@ -14,7 +16,7 @@ def createUser(id, name):
     )
 
 
-class NavigatorGetTestCase(unittest.TestCase):
+class TestNavigatorGet(object):
     def test_get(self):
         with requests_mock.Mocker() as m:
             m.get(
@@ -33,9 +35,9 @@ class NavigatorGetTestCase(unittest.TestCase):
                 .add_resource(
                     "users",
                     [
-                        createUser("fred", "Fred"),
-                        createUser("sue", "Sue"),
-                        createUser("mary", "Mary"),
+                        create_user("fred", "Fred"),
+                        create_user("sue", "Sue"),
+                        create_user("mary", "Mary"),
                     ],
                 )
                 .to_object(),
@@ -46,16 +48,16 @@ class NavigatorGetTestCase(unittest.TestCase):
                 "http://test.com", {"http": {"headers": headers}}
             )
             result = discovery_result.get("users")
-            self.assertEqual(result.status(), 200)
+            assert result.status() == 200
 
             users = result.resource().get_resource("users")
             names = list(map(lambda u: u.get_property("name"), users))
 
-            self.assertEqual(result.resource().get_property("test"), 1)
-            self.assertEqual(
-                result.resource().get_href("self"), "http://test.com/users"
+            assert result.resource().get_property("test") == 1
+            assert (
+                result.resource().get_href("self") == "http://test.com/users"
             )
-            self.assertEqual(names, ["Fred", "Sue", "Mary"])
+            assert names == ["Fred", "Sue", "Mary"]
 
     def test_get_with_params(self):
         with requests_mock.Mocker() as m:
@@ -69,17 +71,17 @@ class NavigatorGetTestCase(unittest.TestCase):
             )
             m.get(
                 "http://test.com/users/fred",
-                json=createUser("fred", "Fred").to_object(),
+                json=create_user("fred", "Fred").to_object(),
             )
             navigator = Navigator()
             discovery_result = navigator.discover(
                 "http://test.com",
             )
             result = discovery_result.get("user", {"userId": "fred"})
-            self.assertEqual(result.status(), 200)
+            assert result.status() == 200
 
-            self.assertEqual(result.resource().get_property("name"), "Fred")
+            assert result.resource().get_property("name") == "Fred"
 
 
 if __name__ == "__main__":
-    unittest.main()
+    sys.exit(pytest.main([__file__]))

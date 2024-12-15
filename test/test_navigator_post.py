@@ -1,11 +1,13 @@
-import unittest
+import sys
+import pytest
+
 import requests_mock
 
 from pyhalboy.resource import Resource
 from pyhalboy.navigator import Navigator
 
 
-def createUser(id, name):
+def create_user(id, name):
     return (
         Resource()
         .add_link("self", "/users/{}".format(id))
@@ -13,7 +15,7 @@ def createUser(id, name):
     )
 
 
-class NavigatorPostTestCase(unittest.TestCase):
+class TestNavigatorPost(object):
     def test_post(self):
         with requests_mock.Mocker() as m:
             m.get(
@@ -36,11 +38,11 @@ class NavigatorPostTestCase(unittest.TestCase):
                 "http://test.com", {"http": {"headers": headers}}
             )
             result = discovery_result.post("users", {"name": "Thomas"})
-            self.assertEqual(result.status(), 200)
-            self.assertEqual(
-                result.get_header("Location"), "http://test.com/users/thomas"
+            assert result.status() == 200
+            assert (
+                result.get_header("Location") == "http://test.com/users/thomas"
             )
 
 
 if __name__ == "__main__":
-    unittest.main()
+    sys.exit(pytest.main([__file__]))

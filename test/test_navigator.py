@@ -1,10 +1,12 @@
-import unittest
+import sys
+import pytest
 
 import requests_mock
+
 from pyhalboy.navigator import Navigator
 
 
-class NavigatorTestCase(unittest.TestCase):
+class TestNavigatorTestCase(object):
     def test_discover(self):
         with requests_mock.Mocker() as m:
             m.get(
@@ -20,11 +22,11 @@ class NavigatorTestCase(unittest.TestCase):
             discovery_result = navigator.discover(
                 "http://test.com", {"http": {"headers": headers}}
             )
-            self.assertEqual(discovery_result.status(), 200)
+            assert discovery_result.status() == 200
 
             href = discovery_result.resource().get_href("users")
-            self.assertEqual(href, "/users")
+            assert href == "/users"
 
 
 if __name__ == "__main__":
-    unittest.main()
+    sys.exit(pytest.main([__file__]))
