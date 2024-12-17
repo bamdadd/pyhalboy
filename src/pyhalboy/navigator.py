@@ -7,7 +7,7 @@ from uritemplate import URITemplate
 
 def resolve_link(templated_url, params):
     template = URITemplate(templated_url)
-    variables = template.variables
+    # variables = template.variables
     # variables = template.parts.reduce((accumulator, part) => {
     # if not r.is_empty(part.variables):
     #     return r.concat(part.variables.map(variable => variable.name), accumulator)
@@ -15,15 +15,12 @@ def resolve_link(templated_url, params):
     # return accumulator
     # }, [])
     url = template.expand(params)
-    query_object = uri.URI(url)
+    # query_object = uri.URI(url)
     full_params = params
     # full_params = r.merge(r.omit(variables, params), query_object)
     # url_without_query_string = URI(url).query('').toString()
 
-    return {
-        'href': url,
-        'params': full_params
-    }
+    return {"href": url, "params": full_params}
 
 
 def make_absolute(base, href):
@@ -69,18 +66,20 @@ class Navigator:
 
     def _resolve_link(self, rel, params):
         relative_href = self._resource.get_href(rel)
-        if (r.is_empty(relative_href)):
-            raise RuntimeError('Attempting to follow the link "{}", which does not exist')
+        if r.is_empty(relative_href):
+            raise RuntimeError(
+                'Attempting to follow the link "{}", which does not exist'
+            )
         link = resolve_link(relative_href, params)
         return {
-            'href': make_absolute(self._location, link['href']),
-            'query_params': link['params']
+            "href": make_absolute(self._location, link["href"]),
+            "query_params": link["params"],
         }
 
     def get(self, rel, params={}, config={}):
         link = self._resolve_link(rel, params)
-        return self.get_url(link['href'], link['query_params'], config)
+        return self.get_url(link["href"], link["query_params"], config)
 
     def post(self, rel, body, params={}, config={}):
         link = self._resolve_link(rel, params)
-        return self.post_url(link['href'], body, link['query_params'], config)
+        return self.post_url(link["href"], body, link["query_params"], config)

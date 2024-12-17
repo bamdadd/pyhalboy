@@ -1,0 +1,52 @@
+[project]
+requires-python = ">=3.12"
+
+[tool.poetry]
+name = "pyhalboy"
+version = "1.0.6"
+description = "Halboy port to python for everything HAL related."
+authors = [
+    "Bamdad Dashtban <bamdadd@gmail.com>",
+    "Jonas Svalin <jonassvalin@gmail.com>",
+    "Toby Clemson <tobyclemson@gmail.com>"
+]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.12"
+requests = "^2.32.3"
+ramda = "^0.7.6"
+uritemplate = "^4.1.1"
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.6.9"
+poethepoet = "^0.29.0"
+pyright = "^1.1.383"
+pytest = "^8.3.3"
+requests-mock = "^1.12.1"
+
+[tool.pyright]
+include = ["src", "test"]
+strict = ["src"]
+reportMissingTypeStubs = "error"
+
+[tool.ruff]
+line-length = 79
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+addopts = ["--strict-markers"]
+
+[tool.poe.tasks]
+lint-check = "ruff check"
+lint-fix = "ruff check --fix"
+format-check = "ruff format --check"
+format-fix = "ruff format"
+type-check = "pyright"
+test = "pytest"
+precommit = ["lint-fix", "format-fix", "test"]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

@@ -154,9 +154,14 @@ sue_result
 ### Contribution
 Feel free to submit PRs and raise bugs.
 
-### publishing
+### Publishing
+
+Prior to publishing the package, you need to configure your PyPi credentials 
+on your local machine. Follow the 
+[instructions in the poetry docs](https://python-poetry.org/docs/repositories/#configuring-credentials) to do this.
+
+To publish the package:
+
 ```shell
- python setup.py install sdist bdist_wheel
- twine upload --repository-url https://test.pypi.org/legacy/ dist/*
- 
+poetry publish 
 ```
