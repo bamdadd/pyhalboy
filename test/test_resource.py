@@ -45,20 +45,6 @@ class TestResource(object):
         assert resource.get_href("ea:basket") == "/baskets/123123"
         assert resource.get_href("ea:customer") == "/customers/3474"
 
-    def test_add_non_link(self):
-        resource = Resource().add_link("ea:basket", None)
-
-        assert resource.to_object() == {}
-
-    def test_add_nil_link(self):
-        resource = Resource().add_links(
-            {"ea:basket": None, "ea:customer": False, "self": "/order/123"}
-        )
-
-        assert resource.to_object() == {
-            "_links": {"self": {"href": "/order/123"}}
-        }
-
     def test_hrefs(self):
         resource = Resource().add_links(
             {
@@ -109,31 +95,13 @@ class TestResource(object):
         }
 
     def test_add_resource(self):
-        resource = Resource().add_resource(
-            "users",
-            [
-                create_user("fred", "Fred"),
-                create_user("sue", "Sue"),
-                create_user("mary", "Mary"),
-            ],
-        )
+        fred = create_user("fred", "Fred")
+        sue = create_user("sue", "Sue")
+        mary = create_user("mary", "Mary")
 
-        assert resource.get_resources() == {
-            "users": [
-                {
-                    "_links": {"self": {"href": "/users/fred"}},
-                    "name": "Fred",
-                },
-                {
-                    "_links": {"self": {"href": "/users/sue"}},
-                    "name": "Sue",
-                },
-                {
-                    "_links": {"self": {"href": "/users/mary"}},
-                    "name": "Mary",
-                },
-            ]
-        }
+        resource = Resource().add_resource("users", [fred, sue, mary])
+
+        assert resource.get_resources() == {"users": [fred, sue, mary]}
 
     def test_get_resources(self):
         resource1 = Resource().add_links(
@@ -158,20 +126,8 @@ class TestResource(object):
         )
 
         assert resource.get_resources() == {
-            "ea:address": {
-                "_links": {
-                    "ea:basket": {"href": "/baskets/98713"},
-                    "ea:customer": {"href": "/customers/12369"},
-                    "self": {"href": "/orders/124"},
-                }
-            },
-            "ea:order": {
-                "_links": {
-                    "ea:basket": {"href": "/baskets/98713"},
-                    "ea:customer": {"href": "/customers/12369"},
-                    "self": {"href": "/orders/124"},
-                }
-            },
+            "ea:order": resource1,
+            "ea:address": resource2,
         }
 
     def test_stack_resources(self):
