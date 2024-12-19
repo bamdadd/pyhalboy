@@ -1,32 +1,40 @@
-# import sys
-# import pytest
-#
-# import requests_mock
-#
-# from pyhalboy.navigator import Navigator
-#
-#
-# class TestNavigatorTestCase(object):
-#     def test_discover(self):
-#         with requests_mock.Mocker() as m:
-#             m.get(
-#                 "http://test.com",
-#                 json={
-#                     "_links": {"users": {"href": "/users"}},
-#                     "_embedded": {},
-#                     "prop1": 1,
-#                 },
-#             )
-#             navigator = Navigator()
-#             headers = {"authorization": "some-token"}
-#             discovery_result = navigator.discover(
-#                 "http://test.com", {"http": {"headers": headers}}
-#             )
-#             assert discovery_result.status() == 200
-#
-#             href = discovery_result.resource().get_href("users")
-#             assert href == "/users"
-#
-#
-# if __name__ == "__main__":
-#     sys.exit(pytest.main([__file__]))
+import sys
+import pytest
+
+import httpx
+import respx
+
+from pyhalboy.navigator import Navigator
+
+
+class TestNavigatorTestCase(object):
+    def test_discover(self):
+        router = respx.Router()
+        router.get("http://test.com").mock(
+            return_value=httpx.Response(
+                200,
+                json={
+                    "_links": {"users": {"href": "/users"}},
+                    "_embedded": {},
+                    "prop1": 1,
+                },
+            )
+        )
+        client = httpx.Client(
+            transport=httpx.MockTransport(handler=router.handler)
+        )
+
+        headers = {"authorization": "some-token"}
+        navigator = Navigator.discover(
+            "http://test.com",
+            settings={"client": client, "http": {"headers": headers}},
+        )
+
+        assert navigator.status() == 200
+
+        href = navigator.resource().get_href("users")
+        assert href == "/users"
+
+
+if __name__ == "__main__":
+    sys.exit(pytest.main([__file__]))
