@@ -1,180 +1,250 @@
-import functools as f
-import json
+from typing import (
+    Any,
+    Callable,
+    NotRequired,
+    Self,
+    TypedDict,
+    cast,
+)
+from collections.abc import Mapping, Sequence
 
-import ramda as r
+from .types import Href, LinkRel, PropertyName, PropertyValue, ResourceRel
 
 
-def objects_to_links(_links):
-    return _links or {}
+class LinkDict(TypedDict):
+    href: Href
+    title: NotRequired[str]
+    templated: NotRequired[bool]
 
 
-def object_to_resource(_embedded):
-    if (not _embedded) or r.is_empty(_embedded):
+# This requires https://peps.python.org/pep-0728
+# class ResourceDict(TypedDict, extra_items=JSONNode):
+#     _links: Mapping[LinkRel, LinkDict | Sequence[LinkDict]]
+#     _embedded: Mapping[ResourceRel, Self | Sequence[Self]]
+
+ResourceDict = Mapping[str, Any]
+
+
+class EmbeddedPropertyDict(TypedDict):
+    _embedded: NotRequired[
+        Mapping[ResourceRel, ResourceDict | Sequence[ResourceDict]]
+    ]
+
+
+class LinksPropertyDict(TypedDict):
+    _links: NotRequired[Mapping[LinkRel, LinkDict | Sequence[LinkDict]]]
+
+
+def dict_to_resource(resource_dict: ResourceDict) -> "Resource":
+    _links = resource_dict.get("_links", {})
+    _embedded = resource_dict.get("_embedded", {})
+    _properties = {
+        prop: resource_dict[prop]
+        for prop in resource_dict.keys()
+        if prop not in ["_links", "_embedded"]
+    }
+
+    return (
+        Resource()
+        .add_links(_links)
+        .add_properties(_properties)
+        .add_resources(dict_to_embedded(_embedded))
+    )
+
+
+def dicts_to_resources(
+    resource_dicts: ResourceDict | Sequence[ResourceDict],
+) -> "Resource | Sequence[Resource]":
+    if isinstance(resource_dicts, Sequence):
+        return [
+            dict_to_resource(resource_dict) for resource_dict in resource_dicts
+        ]
+    return dict_to_resource(resource_dicts)
+
+
+def dict_to_embedded(
+    embeds_dict: Mapping[ResourceRel, ResourceDict | Sequence[ResourceDict]],
+) -> dict[ResourceRel, "Resource | Sequence[Resource]"]:
+    if len(embeds_dict) == 0:
         return {}
-    result = {}
-    for k, v in _embedded.items():
-        if isinstance(v, dict):
-            result[k] = Resource.from_object(v)
-        else:
-            result[k] = list(
-                map(
-                    lambda x: object_to_resource(x)
-                    if isinstance(x, list)
-                    else Resource.from_object(x),
-                    v,
-                )
-            )
-    return result
+
+    return {
+        rel: dicts_to_resources(embeds_dict[rel]) for rel in embeds_dict.keys()
+    }
 
 
-def links_to_object(links):
-    if r.is_empty(links):
+def links_to_object(
+    links: dict[LinkRel, LinkDict | Sequence[LinkDict]],
+) -> LinksPropertyDict:
+    if len(links) == 0:
         return {}
     return {"_links": links}
 
 
-def resources_to_object(resources):
-    if r.is_empty(resources):
-        return {}
-    coll = resources.copy()
+def resources_to_object(
+    resources: "Resource | Sequence[Resource]",
+) -> ResourceDict | Sequence[ResourceDict]:
+    if isinstance(resources, Sequence):
+        return [resource.to_object() for resource in resources]
+    return resources.to_object()
 
-    for k in coll.keys():
-        if type(coll[k]) is list:
-            coll[k] = list(map(lambda x: x.to_object(), resources[k]))
-        else:
-            coll[k] = coll[k].to_object()
-    return {"_embedded": coll}
+
+def embedded_to_object(
+    embeds: dict[ResourceRel, "Resource | Sequence[Resource]"],
+) -> EmbeddedPropertyDict:
+    if len(embeds) == 0:
+        return {}
+
+    return {
+        "_embedded": {
+            rel: resources_to_object(embeds[rel]) for rel in embeds.keys()
+        }
+    }
+
+
+def create_or_append[R: (LinkRel, ResourceRel), T: (LinkDict, "Resource")](
+    links: dict[R, T | Sequence[T]], rel: R, value: T | Sequence[T]
+) -> dict[R, T | Sequence[T]]:
+    if rel not in links:
+        links[rel] = value
+        return links
+
+    link = links[rel]
+
+    if isinstance(link, Sequence) and isinstance(value, Sequence):
+        links[rel] = [*link, *value]
+    elif isinstance(link, Sequence):
+        links[rel] = [*link, cast(T, value)]
+    else:
+        links[rel] = [cast(T, link), cast(T, value)]
+
+    return links
 
 
 class Resource(object):
-    def __init__(self) -> None:
-        super().__init__()
-        self.properties = {}
-        self.links = {}
-        self.embedded = {}
+    _links: dict[LinkRel, LinkDict | Sequence[LinkDict]]
+    _embedded: dict[ResourceRel, "Resource | Sequence[Resource]"]
+    _properties: dict[PropertyName, PropertyValue]
 
-    def from_object(body):
-        if type(body) is str or type(body) is bytes:
-            object = json.loads(body)
-        elif type(body) is dict:
-            object = body
-        else:
-            raise RuntimeError(f"Unknown Type {type(body)} for {body}")
-        _links = object.get("_links")
-        _embedded = object.get("_embedded")
-        properties = {
-            k: object[k]
-            for k in object.keys()
-            if k not in ["_links", "_embedded"]
-        }
+    def __init__(
+        self,
+        properties: Mapping[PropertyName, PropertyValue] = {},
+        links: Mapping[LinkRel, LinkDict | Sequence[LinkDict]] = {},
+        embedded: Mapping[PropertyName, Self | Sequence[Self]] = {},
+    ) -> None:
+        self._properties = dict(properties)
+        self._links = dict(links)
+        self._embedded = dict(embedded)
 
-        return (
-            Resource()
-            .add_links(objects_to_links(_links))
-            .add_properties(properties)
-            .add_resources(object_to_resource(_embedded))
-        )
+    @staticmethod
+    def from_object(resource_dict: ResourceDict):
+        return dict_to_resource(resource_dict)
 
-    def get_href(self, rel):
-        return self.links[rel]["href"]
+    def get_href(self, rel: LinkRel) -> Href | Sequence[Href]:
+        link_or_links = self._links[rel]
 
-    def _create_or_append(self, coll, rel, value):
-        if rel not in coll:
-            coll[rel] = value
-            return coll
-        if type(coll[rel]) is list:
-            coll[rel] = r.flatten([coll[rel], value])
-            return coll
-        coll[rel] = [coll[rel], value]
-        return coll
+        if isinstance(link_or_links, Sequence):
+            return [link["href"] for link in link_or_links]
 
-    def add_link(self, rel, value):
-        if not value or r.is_nil(value) or r.is_empty(value):
-            return self
-        if type(value) is str:
+        return link_or_links["href"]
+
+    def add_link(self, rel: LinkRel, value: LinkDict | Href) -> Self:
+        if isinstance(value, Href):
             return self.add_link(rel, {"href": value})
-        self.links = self._create_or_append(self.links.copy(), rel, value)
+
+        self._links = create_or_append(self._links, rel, value)
+
         return self
 
-    def get_link(self, rel):
-        return self.links[rel]
+    def get_link(self, rel: LinkRel) -> LinkDict | Sequence[LinkDict]:
+        link_or_links = self._links[rel]
 
-    def get_hrefs(self):
-        return f.reduce(
-            lambda acc, x: {
-                **acc,
-                x[0]: r.cond(
-                    [
-                        [r.pipe(type, r.equals(dict)), r.prop("href")],
-                        [r.pipe(type, r.equals(list)), r.map(r.prop("href"))],
-                    ],
-                    x[1],
-                ),
-            },
-            r.to_pairs(self.links),
-            {},
-        )
+        if isinstance(link_or_links, Sequence):
+            return list(link_or_links)
 
-    def get_links(self):
-        return self.links
+        return link_or_links
 
-    def add_links(self, coll):
-        list(
-            map(
-                lambda pair: self.add_link(pair[0], pair[1]),
-                (r.to_pairs(coll)),
-            )
-        )
+    def get_hrefs(self) -> Mapping[LinkRel, Href | Sequence[Href]]:
+        return {rel: self.get_href(rel) for rel in self._links}
+
+    def get_links(self) -> Mapping[LinkRel, LinkDict | Sequence[LinkDict]]:
+        return dict(self._links)
+
+    def add_links(
+        self,
+        links: Mapping[LinkRel, Href | LinkDict | Sequence[LinkDict]],
+    ) -> Self:
+        for rel, value in links.items():
+            if isinstance(value, Href) or isinstance(value, dict):
+                self.add_link(rel, value)
+            else:
+                for link in value:
+                    self.add_link(rel, link)
+
         return self
 
-    def add_resources(self, coll):
-        if not r.is_empty(coll):
-            list(
-                map(
-                    lambda pair: self.add_resource(pair[0], pair[1]),
-                    (r.to_pairs(coll)),
-                )
-            )
+    def add_resources(
+        self, embeds: Mapping[ResourceRel, Self | Sequence[Self]]
+    ) -> Self:
+        for rel in embeds:
+            self.add_resource(rel, embeds[rel])
+
         return self
 
-    def get_resources(self):
-        return resources_to_object(self.embedded).get("_embedded")
+    def get_resources(
+        self,
+    ) -> Mapping[ResourceRel, "Resource | Sequence[Resource]"]:
+        return dict(self._embedded)
 
-    def get_resource(self, key):
-        return self.embedded[key]
+    def get_resource(
+        self, rel: ResourceRel
+    ) -> "Resource | Sequence[Resource]":
+        resource_or_resources = self._embedded[rel]
 
-    def add_resource(self, rel, value):
-        if not value or r.is_nil(value) or r.is_empty(value):
-            return self
-        self.embedded = self._create_or_append(
-            self.embedded.copy(), rel, value
-        )
+        if isinstance(resource_or_resources, Sequence):
+            return list(resource_or_resources)
+
+        return resource_or_resources
+
+    def add_resource(
+        self, rel: ResourceRel, value: Self | Sequence[Self]
+    ) -> Self:
+        self._embedded = create_or_append(self._embedded, rel, value)
         return self
 
-    def apply_to_resource(self, coll, fn):
-        return r.reduce(fn, self, r.to_pairs(coll))
+    def apply_to_resource[
+        R: (LinkRel, ResourceRel, PropertyName),
+        V: (LinkDict, "Resource", PropertyValue),
+    ](
+        self,
+        items: Mapping[R, V],
+        fn: Callable[["Resource", R, V], "Resource"],
+    ) -> "Resource":
+        slf = self
+        for rel, value in items.items():
+            slf = fn(slf, rel, value)
+        return slf
 
-    def add_property(self, key, value):
-        self.properties[key] = value
+    def add_property(self, key: PropertyName, value: PropertyValue):
+        self._properties[key] = value
         return self
 
-    def get_property(self, key):
-        return self.properties[key]
+    def get_property(self, name: PropertyName) -> PropertyValue:
+        return self._properties[name]
 
-    def get_properties(self):
-        return self.properties
+    def get_properties(self) -> Mapping[PropertyName, PropertyValue]:
+        return dict(self._properties)
 
-    def add_properties(self, coll):
-        list(
-            map(
-                lambda pair: self.add_property(pair[0], pair[1]),
-                (r.to_pairs(coll)),
-            )
-        )
+    def add_properties(
+        self, properties: Mapping[PropertyName, PropertyValue]
+    ) -> Self:
+        for property, value in properties.items():
+            self.add_property(property, value)
+
         return self
 
-    def to_object(self):
-        return r.merge(
-            r.merge({**self.properties}, links_to_object(self.links)),
-            resources_to_object(self.embedded),
-        )
+    def to_object(self) -> ResourceDict:
+        links = links_to_object(self._links)
+        embedded = embedded_to_object(self._embedded)
+
+        return {**links, **self._properties, **embedded}

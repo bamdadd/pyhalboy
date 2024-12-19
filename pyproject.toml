@@ -1,5 +1,5 @@
 [project]
-requires-python = ">=3.12"
+requires-python = ">=3.13"
 
 [tool.poetry]
 name = "pyhalboy"
@@ -14,17 +14,16 @@ license = "MIT"
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.12"
-requests = "^2.32.3"
-ramda = "^0.7.6"
+python = ">=3.13,<4.0"
 uritemplate = "^4.1.1"
+httpx = "^0.28.1"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.6.9"
 poethepoet = "^0.29.0"
 pyright = "^1.1.383"
 pytest = "^8.3.3"
-requests-mock = "^1.12.1"
+respx = "^0.21.1"
 
 [tool.pyright]
 include = ["src", "test"]
@@ -45,7 +44,7 @@ format-check = "ruff format --check"
 format-fix = "ruff format"
 type-check = "pyright"
 test = "pytest"
-precommit = ["lint-fix", "format-fix", "test"]
+precommit = ["lint-fix", "format-fix", "type-check", "test"]
 
 [build-system]
 requires = ["poetry-core"]

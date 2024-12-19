@@ -1,30 +1,40 @@
-import unittest
+import sys
+import pytest
 
-import requests_mock
+import httpx
+import respx
+
 from pyhalboy.navigator import Navigator
 
 
-class NavigatorTestCase(unittest.TestCase):
+class TestNavigatorTestCase(object):
     def test_discover(self):
-        with requests_mock.Mocker() as m:
-            m.get(
-                "http://test.com",
+        router = respx.Router()
+        router.get("http://test.com").mock(
+            return_value=httpx.Response(
+                200,
                 json={
                     "_links": {"users": {"href": "/users"}},
                     "_embedded": {},
                     "prop1": 1,
                 },
             )
-            navigator = Navigator()
-            headers = {"authorization": "some-token"}
-            discovery_result = navigator.discover(
-                "http://test.com", {"http": {"headers": headers}}
-            )
-            self.assertEqual(discovery_result.status(), 200)
+        )
+        client = httpx.Client(
+            transport=httpx.MockTransport(handler=router.handler)
+        )
 
-            href = discovery_result.resource().get_href("users")
-            self.assertEqual(href, "/users")
+        headers = {"authorization": "some-token"}
+        navigator = Navigator.discover(
+            "http://test.com",
+            settings={"client": client, "http": {"headers": headers}},
+        )
+
+        assert navigator.status() == 200
+
+        href = navigator.resource().get_href("users")
+        assert href == "/users"
 
 
 if __name__ == "__main__":
-    unittest.main()
+    sys.exit(pytest.main([__file__]))
