@@ -7,7 +7,7 @@ from collections.abc import Mapping
 from httpx import Client, Response
 from uritemplate import URITemplate
 
-from .types import Href, LinkRel, StatusCode, JSONNode
+from .types import Href, LinkRel, StatusCode, JsonValue
 from .resource import Resource
 
 
@@ -94,7 +94,7 @@ def _get_url(
 def _post_url(
     *,
     url: Href,
-    body: JSONNode,
+    body: JsonValue,
     params: Mapping[str, str] | None = None,
     settings: Settings,
 ):
@@ -172,7 +172,7 @@ class Navigator:
     def post(
         self,
         rel: LinkRel,
-        body: JSONNode,
+        body: JsonValue,
         params: Mapping[str, str] | None = None,
     ):
         href, resolved_params = self._resolve_link(rel=rel, params=params)
