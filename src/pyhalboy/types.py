@@ -11,6 +11,7 @@ JsonValueType = JsonValue.__value__
 
 PropertyName = str
 PropertyValue = JsonValue
+Properties = JsonObject
 ResourceRel = str
 LinkRel = str
 Href = str

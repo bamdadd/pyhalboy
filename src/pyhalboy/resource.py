@@ -8,7 +8,14 @@ from typing import (
 )
 from collections.abc import Mapping, Sequence
 
-from .types import Href, LinkRel, PropertyName, PropertyValue, ResourceRel
+from .types import (
+    Href,
+    LinkRel,
+    PropertyName,
+    PropertyValue,
+    Properties,
+    ResourceRel,
+)
 
 
 class LinkDict(TypedDict):
@@ -232,12 +239,10 @@ class Resource(object):
     def get_property(self, name: PropertyName) -> PropertyValue:
         return self._properties[name]
 
-    def get_properties(self) -> Mapping[PropertyName, PropertyValue]:
+    def get_properties(self) -> Properties:
         return dict(self._properties)
 
-    def add_properties(
-        self, properties: Mapping[PropertyName, PropertyValue]
-    ) -> Self:
+    def add_properties(self, properties: Properties) -> Self:
         for property, value in properties.items():
             self.add_property(property, value)
 
