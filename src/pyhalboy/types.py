@@ -1,17 +1,16 @@
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
+from typing import Sequence
 
-JSONNode = (
-    str
-    | int
-    | float
-    | bool
-    | None
-    | Mapping[str, "JSONNode"]
-    | Sequence["JSONNode"]
-)
+type JsonObject = Mapping[str, JsonValue]
+type JsonArray = Sequence[JsonValue]
+type JsonPrimitive = str | int | float | bool | None
+type JsonValue = JsonObject | JsonArray | JsonPrimitive
+
+JsonValueType = JsonValue.__value__
+
 
 PropertyName = str
-PropertyValue = JSONNode
+PropertyValue = JsonValue
 ResourceRel = str
 LinkRel = str
 Href = str
